@@ -23,6 +23,7 @@ lib/liblzma.so.${_LZMA_VERSION}
 lib/libtinfo.so.6
 lib/libz.so
 lib/libz.so.1
+lib/libz.a
 share/wasi-sysroot
 "
 
@@ -122,6 +123,7 @@ termux_step_pre_configure() {
 	mv $TERMUX_PREFIX/lib/libtinfo.so.6{,.tmp} || :
 	mv $TERMUX_PREFIX/lib/libz.so.1{,.tmp} || :
 	mv $TERMUX_PREFIX/lib/libz.so{,.tmp} || :
+	mv $TERMUX_PREFIX/lib/libz.a{,.tmp} || :
 }
 
 termux_step_configure() {
@@ -250,6 +252,7 @@ termux_step_make_install() {
 	mv libtinfo.so.6{.tmp,} || :
 	mv libz.so.1{.tmp,} || :
 	mv libz.so{.tmp,} || :
+	mv libz.a{.tmp,} || :
 
 	ln -vfs rustlib/${CARGO_TARGET_NAME}/lib/*.so .
 	ln -vfs lld ${TERMUX_PREFIX}/bin/rust-lld

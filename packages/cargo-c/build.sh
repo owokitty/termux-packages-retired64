@@ -41,11 +41,14 @@ termux_step_pre_configure() {
 
 	mv $TERMUX_PREFIX/lib/libz.so.1{,.tmp}
 	mv $TERMUX_PREFIX/lib/libz.so{,.tmp}
+	mv $TERMUX_PREFIX/lib/libz.a{,.tmp}
 
 	ln -sfT $(readlink -f $TERMUX_PREFIX/lib/libz.so.1.tmp) \
 		$_CARGO_TARGET_LIBDIR/libz.so.1
 	ln -sfT $(readlink -f $TERMUX_PREFIX/lib/libz.so.tmp) \
 		$_CARGO_TARGET_LIBDIR/libz.so
+	ln -sfT $(readlink -f $TERMUX_PREFIX/lib/libz.a.tmp) \
+		$_CARGO_TARGET_LIBDIR/libz.a
 
 	if [[ "${TERMUX_ARCH}" == "x86_64" ]]; then
 		RUSTFLAGS+=" -C link-arg=$($CC -print-libgcc-file-name)"
@@ -55,9 +58,11 @@ termux_step_pre_configure() {
 termux_step_post_make_install() {
 	mv $TERMUX_PREFIX/lib/libz.so.1{.tmp,}
 	mv $TERMUX_PREFIX/lib/libz.so{.tmp,}
+	mv $TERMUX_PREFIX/lib/libz.a{.tmp,}
 }
 
 termux_step_post_massage() {
 	rm -f lib/libz.so.1
 	rm -f lib/libz.so
+	rm -f lib/libz.a
 }

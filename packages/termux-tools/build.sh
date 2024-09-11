@@ -22,6 +22,7 @@ TERMUX_PKG_DEPENDS="bzip2, coreutils, curl, dash, diffutils, findutils, gawk, gr
 TERMUX_PKG_RECOMMENDS="ed, dos2unix, inetutils, net-tools, patch, unzip"
 
 termux_step_pre_configure() {
+	find . -type f -print0 | xargs -0 sed -i "s/com.termux/$TERMUX_APP_PACKAGE/g"
 	autoreconf -vfi
 }
 

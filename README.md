@@ -1,4 +1,6 @@
-# Termux packages
+### This is a rough/WIP example of packages for a fork of Termux with a changed package name
+
+# Termux packages original README below
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/termux/termux-packages)
 [![Packages last build status](https://github.com/termux/termux-packages/workflows/Packages/badge.svg)](https://github.com/termux/termux-packages/actions)
