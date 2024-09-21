@@ -12,7 +12,6 @@ TERMUX_PKG_BREAKS="glib-dev"
 TERMUX_PKG_REPLACES="glib-dev"
 TERMUX_PKG_DISABLE_GIR=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
--Dintrospection=enabled
 -Druntime_dir=$TERMUX_PREFIX/var/run
 -Dlibmount=disabled
 -Dman-pages=enabled
@@ -69,8 +68,12 @@ termux_step_pre_configure() {
 
 	TERMUX_PKG_VERSION=. termux_setup_gir
 
-	# Workaround: Remove cyclic dependency between gir and glib
-	sed -i "/Requires:/d" "${TERMUX_PREFIX}/lib/pkgconfig/gobject-introspection-1.0.pc"
+	# Workaround: cyclic dependency between gir and glib
+	if [ -f "${TERMUX_PREFIX}/lib/pkgconfig/gobject-introspection-1.0.pc" ]; then
+		sed -i "/Requires:/d" "${TERMUX_PREFIX}/lib/pkgconfig/gobject-introspection-1.0.pc"
+	else
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" -Dintrospection=disabled"
+	fi
 }
 
 termux_step_post_make_install() {

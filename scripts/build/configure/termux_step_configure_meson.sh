@@ -8,6 +8,8 @@ termux_step_configure_meson() {
 		_meson_stripflag=
 	fi
 
+	export TERMUX_PKG_BUILDDIR=$TERMUX_TOPDIR/$TERMUX_PKG_NAME/build
+
 	CC=gcc CXX=g++ CFLAGS= CXXFLAGS= CPPFLAGS= LDFLAGS= $TERMUX_MESON \
 		setup \
 		$TERMUX_PKG_SRCDIR \

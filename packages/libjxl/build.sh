@@ -32,3 +32,10 @@ termux_step_post_get_source() {
 
 	./deps.sh
 }
+
+termux_step_pre_configure() {
+	# something else unknown installs a very old and useless version of libjxl that conflicts
+	if [ -d "$TERMUX_PREFIX/include/jxl/" ]; then
+		rm -r "$TERMUX_PREFIX/include/jxl/"
+	fi
+}

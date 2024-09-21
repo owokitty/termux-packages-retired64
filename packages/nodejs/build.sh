@@ -48,6 +48,12 @@ termux_step_host_build() {
 }
 
 termux_step_pre_configure() {
+	# ../../deps/v8/third_party/abseil-cpp/absl/container/internal/raw_hash_set.cc:60:31: 
+	# error: use of undeclared identifier 'SooCapacity'
+	if [ -d "$TERMUX_PREFIX/include/absl/" ]; then
+		mv "$TERMUX_PREFIX/include/absl/" "$TERMUX_PREFIX/include/absl.bak/"
+	fi
+
 	termux_setup_ninja
 }
 
@@ -122,4 +128,10 @@ termux_step_create_debscripts() {
 	#!$TERMUX_PREFIX/bin/sh
 	npm config set foreground-scripts true
 	EOF
+}
+
+termux_step_post_massage() {
+	if [ -d "$TERMUX_PREFIX/include/absl.bak/" ]; then
+		mv "$TERMUX_PREFIX/include/absl.bak/" "$TERMUX_PREFIX/include/absl/"
+	fi
 }

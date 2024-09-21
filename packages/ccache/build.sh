@@ -23,3 +23,14 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 termux_step_pre_configure() {
 	LDFLAGS+=" -landroid-spawn"
 }
+
+termux_step_post_massage() {
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	# installing ccache for Android aarch64 into Ubuntu amd64 docker builder's 
+	# $TERMUX_PREFIX/bin folder and failing to remove it afterward will result in frequent 
+	# "/data/data/com.termux/files/usr/bin/ccache: cannot execute binary file: Exec format error"
+	# when building other packages afterward (for example libarrow-cpp)
+	rm $TERMUX_PREFIX/bin/ccache
+}

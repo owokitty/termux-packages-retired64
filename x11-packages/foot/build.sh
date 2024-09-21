@@ -8,6 +8,9 @@ TERMUX_PKG_SHA256=59d22187f7ceaaaa570a5299b102e8f4692826e98785f89ad9d8911802ccc0
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libandroid-support, fontconfig, freetype, libfcft, libpixman, libwayland, libxkbcommon, utf8proc"
 TERMUX_PKG_BUILD_DEPENDS="libtllist, libwayland-protocols"
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+-Ddocs=disabled
+"
 
 termux_step_pre_configure() {
 	export PATH="$TERMUX_PREFIX/opt/libwayland/cross/bin:$PATH"

@@ -17,3 +17,14 @@ gl_cv_func_setlocale_works=yes
 "
 # Avoid automagic dependency on libiconv
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" am_cv_func_iconv=no"
+
+termux_step_post_massage() {
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	# installing grep for Android aarch64 into Ubuntu amd64 docker builder's 
+	# $TERMUX_PREFIX/bin folder and failing to remove it afterward will result in frequent 
+	# "/data/data/com.termux/files/usr/bin/grep: cannot execute binary file: Exec format error"
+	# when building other packages afterward (for example libtheora)
+	rm $TERMUX_PREFIX/bin/grep
+}

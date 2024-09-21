@@ -16,5 +16,21 @@ TCLLIBDIR=${TERMUX_PREFIX}/lib/tcl8.6/sqlite
 "
 
 termux_step_pre_configure() {
+	# sqlcipher/src/src/tclsqlite.c:3170:10: error: call to undeclared function 'sqlite3_rekey'
+	if [ -f "$TERMUX_PREFIX/include/sqlite3.h" ]; then
+		mv  "$TERMUX_PREFIX/include/sqlite3.h"  "$TERMUX_PREFIX/include/sqlite3.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sqlite3ext.h" ]; then
+		mv  "$TERMUX_PREFIX/include/sqlite3ext.h"  "$TERMUX_PREFIX/include/sqlite3ext.h.bak"
+	fi
 	CPPFLAGS+=" -DSQLCIPHER_OMIT_LOG_DEVICE -DSQLITE_HAS_CODEC"
+}
+
+termux_step_post_massage() {
+	if [ -f "$TERMUX_PREFIX/include/sqlite3.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/sqlite3.h.bak"  "$TERMUX_PREFIX/include/sqlite3.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sqlite3ext.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/sqlite3ext.h.bak"  "$TERMUX_PREFIX/include/sqlite3ext.h"
+	fi
 }

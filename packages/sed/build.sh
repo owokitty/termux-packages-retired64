@@ -24,3 +24,14 @@ termux_step_pre_configure() {
 termux_step_post_configure() {
 	touch -d "next hour" $TERMUX_PKG_SRCDIR/doc/sed.1
 }
+
+termux_step_post_massage() {
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	# installing sed for Android aarch64 into Ubuntu amd64 docker builder's 
+	# $TERMUX_PREFIX/bin folder and failing to remove it afterward will result in frequent 
+	# "/data/data/com.termux/files/usr/bin/sed: cannot execute binary file: Exec format error"
+	# when building other packages afterward (for example libtheora)
+	rm $TERMUX_PREFIX/bin/sed
+}

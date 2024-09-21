@@ -61,7 +61,7 @@ termux_step_host_build() {
 	cat "${TERMUX_PREFIX}/share/doc/${TERMUX_PKG_NAME}/VERSION"
 	echo
 
-	mv -v "${TERMUX_PKG_HOSTBUILD_DIR}/install/share/cmake" "${TERMUX_PREFIX}/share"
+	rsync -av "${TERMUX_PKG_HOSTBUILD_DIR}/install/share/cmake" "${TERMUX_PREFIX}/share/"
 
 	local llvm_major_version=$(grep llvm-version "${TERMUX_PREFIX}/share/wasi-sysroot/VERSION" | cut -d" " -f2 | cut -d"." -f1)
 	mkdir -p "${TERMUX_PREFIX}/lib/clang/${llvm_major_version}/lib"

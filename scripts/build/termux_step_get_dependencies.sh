@@ -19,6 +19,33 @@ termux_step_get_dependencies() {
 			fi
 		fi
 
+		# glib <-> gobject-introspection cyclic dependency that the above condition ^ as-is isn't
+		# fixing. The fix in termux_step_pre_configure() of packages/glib/build.sh will make sure
+		# that:
+		# * first glib is built with -Dintrospection=disabled
+		# * then gobject-introspection is built
+		# * then glib is built again,
+		# and the second time the installed gobject-introspection will be detected and glib will be
+		# recompiled and reinstalled with introspection support enabled.
+		# POTENTIAL FAILURE CASE: when "glib" itself is passed as an argument to build_package() in
+		# build-bootstraps.sh first in the list before any other package that depends on glib, that
+		# might not be handled and result in a glib without introspection support that could cause a
+		# build failure later.
+		GLIB_PKG="glib"
+		GIR_PKG="gobject-introspection"
+		GLIB_GIR_CYCLE_MARK="$TERMUX_BUILT_PACKAGES_DIRECTORY/$GLIB_PKG-$GIR_PKG-cycle-begun"
+		if [ "$PKG" = "$GLIB_PKG" ] && [ ! -f "$GLIB_GIR_CYCLE_MARK" ]; then
+			touch "$GLIB_GIR_CYCLE_MARK"
+			termux_run_build-package # first glib compilation
+			PKG_DIR="$GIR_PKG"
+			termux_run_build-package # gobject-introspection compilation
+			# remove conflicting files to allow possible outer build
+			# of gobject-introspection to also complete
+			rm -r "$TERMUX_TOPDIR/$GIR_PKG/massage/"*
+			rm "$TERMUX_BUILT_PACKAGES_DIRECTORY/$GLIB_PKG" # remove build marker
+			PKG_DIR="$GLIB_PKG" # second glib compilation happens below
+		fi
+
 		if [ "$TERMUX_INSTALL_DEPS" = true ] || [ "$cyclic_dependence" = true ]; then
 			if [ -z $PKG ]; then
 				continue

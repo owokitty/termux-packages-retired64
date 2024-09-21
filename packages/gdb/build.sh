@@ -25,6 +25,39 @@ TERMUX_PKG_RM_AFTER_INSTALL="share/gdb/syscalls share/gdb/system-gdbinit"
 TERMUX_PKG_MAKE_INSTALL_TARGET="-C gdb install"
 
 termux_step_pre_configure() {
+	# libmd provides $TERMUX_PREFIX/include/md5.h and sha1.h.
+	# gdb/src/libiberty contains source files named md5.h and sha1.h that are completely different.
+	# chaos ensues
+	if [ -f "$TERMUX_PREFIX/include/md5.h" ]; then
+		mv  "$TERMUX_PREFIX/include/md5.h"  "$TERMUX_PREFIX/include/md5.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/rmd160.h" ]; then
+		mv  "$TERMUX_PREFIX/include/rmd160.h"  "$TERMUX_PREFIX/include/rmd160.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/ripemd.h" ]; then
+		mv  "$TERMUX_PREFIX/include/ripemd.h"  "$TERMUX_PREFIX/include/ripemd.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha256.h" ]; then
+		mv  "$TERMUX_PREFIX/include/sha256.h"  "$TERMUX_PREFIX/include/sha256.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha1.h" ]; then
+		mv  "$TERMUX_PREFIX/include/sha1.h"  "$TERMUX_PREFIX/include/sha1.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha2.h" ]; then
+		mv  "$TERMUX_PREFIX/include/sha2.h"  "$TERMUX_PREFIX/include/sha2.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha.h" ]; then
+		mv  "$TERMUX_PREFIX/include/sha.h"  "$TERMUX_PREFIX/include/sha.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/md2.h" ]; then
+		mv  "$TERMUX_PREFIX/include/md2.h"  "$TERMUX_PREFIX/include/md2.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/md4.h" ]; then
+		mv  "$TERMUX_PREFIX/include/md4.h"  "$TERMUX_PREFIX/include/md4.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha512.h" ]; then
+		mv  "$TERMUX_PREFIX/include/sha512.h"  "$TERMUX_PREFIX/include/sha512.h.bak"
+	fi
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
 		export ac_cv_guild_program_name=/usr/bin/guild-3.0
 	fi
@@ -46,4 +79,37 @@ termux_step_pre_configure() {
 
 termux_step_post_make_install() {
 	install -Dm700 -t $TERMUX_PREFIX/bin gdbserver/gdbserver
+}
+
+termux_step_post_massage() {
+	if [ -f "$TERMUX_PREFIX/include/md5.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/md5.h.bak"  "$TERMUX_PREFIX/include/md5.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/rmd160.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/rmd160.h.bak"  "$TERMUX_PREFIX/include/rmd160.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/ripemd.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/ripemd.h.bak"  "$TERMUX_PREFIX/include/ripemd.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha256.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/sha256.h.bak"  "$TERMUX_PREFIX/include/sha256.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha1.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/sha1.h.bak"  "$TERMUX_PREFIX/include/sha1.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha2.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/sha2.h.bak"  "$TERMUX_PREFIX/include/sha2.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/sha.h.bak"  "$TERMUX_PREFIX/include/sha.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/md2.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/md2.h.bak"  "$TERMUX_PREFIX/include/md2.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/md4.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/md4.h.bak"  "$TERMUX_PREFIX/include/md4.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/sha512.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/sha512.h.bak"  "$TERMUX_PREFIX/include/sha512.h"
+	fi
 }

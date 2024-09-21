@@ -21,5 +21,14 @@ termux_pkg_auto_update() {
 }
 
 termux_step_pre_configure() {
+	if [ -f "$TERMUX_PREFIX/lib/libfl.so" ]; then
+		mv "$TERMUX_PREFIX/lib/libfl.so" "$TERMUX_PREFIX/lib/libfl.so.bak"
+	fi
 	sed -i "s/@VERSION@/${TERMUX_PKG_VERSION}/g" $TERMUX_PKG_SRCDIR/Makefile
+}
+
+termux_step_post_make_install() {
+	if [ -f "$TERMUX_PREFIX/lib/libfl.so.bak" ]; then
+		mv "$TERMUX_PREFIX/lib/libfl.so.bak" "$TERMUX_PREFIX/lib/libfl.so"
+	fi
 }

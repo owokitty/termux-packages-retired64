@@ -24,8 +24,10 @@ BOOTSTRAP_ANDROID10_COMPATIBLE=false
 # By default, bootstrap archives will be built for all architectures
 # supported by Termux application.
 # Override with option '--architectures'.
-TERMUX_DEFAULT_ARCHITECTURES=("aarch64" "arm" "i686" "x86_64")
+TERMUX_DEFAULT_ARCHITECTURES=("aarch64")
 TERMUX_ARCHITECTURES=("${TERMUX_DEFAULT_ARCHITECTURES[@]}")
+
+TERMUX_PACKAGE_MANAGER="apt"
 
 TERMUX_PACKAGES_DIRECTORY="/home/builder/termux-packages"
 TERMUX_BUILT_DEBS_DIRECTORY="$TERMUX_PACKAGES_DIRECTORY/output"
@@ -36,10 +38,6 @@ FORCE_BUILD_PACKAGES=0
 
 # A list of packages to build
 declare -a PACKAGES=()
-
-# A list of non-essential packages to build.
-# By default it is empty, but can be filled with option '--add'.
-declare -a ADDITIONAL_PACKAGES=()
 
 # A list of already extracted packages
 declare -a EXTRACTED_PACKAGES=()
@@ -123,6 +121,11 @@ extract_debs() {
 			continue
 		fi
 
+		if [[ "$current_package_name" == *"cross"* ]]; then
+			echo "[*] Skipping cross package '$current_package_name'..."
+			continue
+		fi
+
 		if [[ " ${EXTRACTED_PACKAGES[*]} " == *" $current_package_name "* ]]; then
 			echo "[*] Skipping already extracted package '$current_package_name'..."
 			continue
@@ -201,14 +204,14 @@ add_termux_bootstrap_second_stage_files() {
 		-e "s|@TERMUX_BOOTSTRAP_CONFIG_DIR_PATH@|${TERMUX_BOOTSTRAP_CONFIG_DIR_PATH}|g" \
 		-e "s|@TERMUX_PACKAGE_MANAGER@|${TERMUX_PACKAGE_MANAGER}|g" \
 		-e "s|@TERMUX_PACKAGE_ARCH@|${package_arch}|g" \
-		"$(dirname "$(realpath "$0")")/bootstrap/termux-bootstrap-second-stage.sh" \
+		"$TERMUX_SCRIPTDIR/scripts/bootstrap/termux-bootstrap-second-stage.sh" \
 		> "${BOOTSTRAP_ROOTFS}/${TERMUX_BOOTSTRAP_CONFIG_DIR_PATH}/termux-bootstrap-second-stage.sh"
 	chmod 700 "${BOOTSTRAP_ROOTFS}/${TERMUX_BOOTSTRAP_CONFIG_DIR_PATH}/termux-bootstrap-second-stage.sh"
 
 	# TODO: Remove it when Termux app supports `pacman` bootstraps installation.
 	sed -e "s|@TERMUX_PROFILE_D_PREFIX_DIR_PATH@|${TERMUX_PROFILE_D_PREFIX_DIR_PATH}|g" \
 		-e "s|@TERMUX_BOOTSTRAP_CONFIG_DIR_PATH@|${TERMUX_BOOTSTRAP_CONFIG_DIR_PATH}|g" \
-		"$(dirname "$(realpath "$0")")/bootstrap/01-termux-bootstrap-second-stage-fallback.sh" \
+		"$TERMUX_SCRIPTDIR/scripts/bootstrap/01-termux-bootstrap-second-stage-fallback.sh" \
 		> "${BOOTSTRAP_ROOTFS}/${TERMUX_PROFILE_D_PREFIX_DIR_PATH}/01-termux-bootstrap-second-stage-fallback.sh"
 	chmod 600 "${BOOTSTRAP_ROOTFS}/${TERMUX_PROFILE_D_PREFIX_DIR_PATH}/01-termux-bootstrap-second-stage-fallback.sh"
 
@@ -283,9 +286,6 @@ Available command_options:
   [ --android10 ]
                      Generate bootstrap archives for Android 10+ for
                      apk packaging system.
-  [ -a | --add <packages> ]
-                     Additional packages to include into bootstrap archive.
-                     Multiple packages should be passed as comma-separated list.
   [ --architectures <architectures> ]
                      Override default list of architectures for which bootstrap
                      archives will be created. Multiple architectures should be
@@ -304,9 +304,6 @@ Build default bootstrap archives for all supported archs:
 
 Build default bootstrap archive for aarch64 arch only:
 ./scripts/run-docker.sh ./scripts/build-bootstraps.sh --architectures aarch64 &> build.log
-
-Build bootstrap archive with additionall openssh package for aarch64 arch only:
-./scripts/run-docker.sh ./scripts/build-bootstraps.sh --architectures aarch64 --add openssh &> build.log
 HELP_EOF
 
 echo $'\n'"TERMUX_APP_PACKAGE: \"$TERMUX_APP_PACKAGE\""
@@ -327,19 +324,6 @@ main() {
 				;;
 			--android10)
 				BOOTSTRAP_ANDROID10_COMPATIBLE=true
-				;;
-			-a|--add)
-				if [ $# -gt 1 ] && [ -n "$2" ] && [[ $2 != -* ]]; then
-					for pkg in $(echo "$2" | tr ',' ' '); do
-						ADDITIONAL_PACKAGES+=("$pkg")
-					done
-					unset pkg
-					shift 1
-				else
-					echo "[!] Option '--add' requires an argument." 1>&2
-					show_usage
-					return 1
-				fi
 				;;
 			--architectures)
 				if [ $# -gt 1 ] && [ -n "$2" ] && [[ $2 != -* ]]; then
@@ -421,52 +405,239 @@ main() {
 		PACKAGES=()
 		EXTRACTED_PACKAGES=()
 
-		# Package manager.
-		if ! ${BOOTSTRAP_ANDROID10_COMPATIBLE}; then
-			PACKAGES+=("apt")
-		fi
+		# Add ALL normal packages to build list
+		# blacklist:
+		# https://github.com/termux/termux-packages/issues/21130
+		BLACKLIST=()
+		BLACKLIST+=("audacious-plugins")
+		BLACKLIST+=("audacious")
+		BLACKLIST+=("bionic-host")
+		BLACKLIST+=("cabal-install")
+		BLACKLIST+=("chocolate-doom") # SDL2
+		BLACKLIST+=("clvk")
+		BLACKLIST+=("crypto-monitor")
+		BLACKLIST+=("deadbeef") # msse3
+		BLACKLIST+=("distant")
+		BLACKLIST+=("dosbox-x")
+		BLACKLIST+=("e2tools")
+		BLACKLIST+=("emacs-x") # same
+		BLACKLIST+=("emacs") # soundcard.h
+		BLACKLIST+=("epiphany")
+		BLACKLIST+=("feathernotes")
+		BLACKLIST+=("featherpad")
+		BLACKLIST+=("ffplay")
+		BLACKLIST+=("findomain")
+		BLACKLIST+=("fish")
+		BLACKLIST+=("frida")
+		BLACKLIST+=("gdal") # /bin/sh: 1: CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND: not found
+		BLACKLIST+=("gforth")
+		BLACKLIST+=("ghc-libs")
+		BLACKLIST+=("ghc")
+		BLACKLIST+=("godot")
+		BLACKLIST+=("grafana") 
+		BLACKLIST+=("gw")
+		BLACKLIST+=("hilbish")
+		BLACKLIST+=("hunspell-fr")
+		BLACKLIST+=("hunspell-hu")
+		BLACKLIST+=("hunspell-nl")
+		BLACKLIST+=("hunspell-ru")
+		BLACKLIST+=("ices") # scripts/build/termux_step_get_dependencies.sh. package needs $PREFIX/include/linux/soundcard.h
+		BLACKLIST+=("inkscape")
+		BLACKLIST+=("iptables")
+		BLACKLIST+=("kf6-karchive")
+		BLACKLIST+=("kf6-kauth")
+		BLACKLIST+=("kf6-kcodecs")
+		BLACKLIST+=("kf6-kconfig")
+		BLACKLIST+=("kf6-kcoreaddons")
+		BLACKLIST+=("kf6-kguiaddons")
+		BLACKLIST+=("kf6-ki18n")
+		BLACKLIST+=("kf6-kitemmodels")
+		BLACKLIST+=("kf6-kitemviews")
+		BLACKLIST+=("kf6-kwidgetsaddons")
+		BLACKLIST+=("kf6-kwindowsystem")
+		BLACKLIST+=("layer-shell-qt")
+		BLACKLIST+=("ldc")
+		BLACKLIST+=("lenmus")
+		BLACKLIST+=("lfortran")
+		BLACKLIST+=("lgogdownloader")
+		BLACKLIST+=("libdbusmenu-lxqt")
+		BLACKLIST+=("libfm-qt")
+		BLACKLIST+=("libgnustep-base")
+		BLACKLIST+=("libhtmlcxx")
+		BLACKLIST+=("liblightning")
+		BLACKLIST+=("liblxqt")
+		BLACKLIST+=("libmdbx")
+		BLACKLIST+=("libmpeg2") # libandroid_shmget
+		BLACKLIST+=("libportal")
+		BLACKLIST+=("libqtxdg")
+		BLACKLIST+=("librocksdb") # conflict gtest
+		BLACKLIST+=("libsysstat")
+		BLACKLIST+=("libtorrent") # ERROR: ./lib/libtorrent.so contains undefined symbols:    49: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT   UND backtrace    50: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT   UND backtrace_symbols
+		BLACKLIST+=("libvncserver")
+		BLACKLIST+=("libxmlrpc")
+		BLACKLIST+=("lighttpd")
+		BLACKLIST+=("lit")
+		BLACKLIST+=("lite-xl")
+		BLACKLIST+=("luvi")
+		BLACKLIST+=("luvit")
+		BLACKLIST+=("lximage-qt")
+		BLACKLIST+=("lxqt-about")
+		BLACKLIST+=("lxqt-archiver")
+		BLACKLIST+=("lxqt-build-tools-qt5")
+		BLACKLIST+=("lxqt-config")
+		BLACKLIST+=("lxqt-globalkeys")
+		BLACKLIST+=("lxqt-menu-data")
+		BLACKLIST+=("lxqt-notificationd")
+		BLACKLIST+=("lxqt-openssh-askpass")
+		BLACKLIST+=("lxqt-panel")
+		BLACKLIST+=("lxqt-qtplugin")
+		BLACKLIST+=("lxqt-runner")
+		BLACKLIST+=("lxqt-session")
+		BLACKLIST+=("manim")
+		BLACKLIST+=("mapserver") # gdal
+		BLACKLIST+=("mariadb")
+		BLACKLIST+=("matplotlib") # numpy
+		BLACKLIST+=("mdbook-linkcheck")
+		BLACKLIST+=("mgba")
+		BLACKLIST+=("mindforger")
+		BLACKLIST+=("mkvtoolnix")
+		BLACKLIST+=("mpv-x")
+		BLACKLIST+=("mu") # emacs
+		BLACKLIST+=("mumble-server")
+		BLACKLIST+=("music-file-organizer")
+		BLACKLIST+=("ncpamixer")
+		BLACKLIST+=("net-snmp")
+		BLACKLIST+=("nextcloud-client")
+		BLACKLIST+=("ntfs-3g")
+		BLACKLIST+=("obconf-qt")
+		BLACKLIST+=("octave-x")
+		BLACKLIST+=("octave")
+		BLACKLIST+=("openethereum")
+		BLACKLIST+=("pass-otp")
+		BLACKLIST+=("pass")
+		BLACKLIST+=("peaclock")
+		BLACKLIST+=("pika") # gtest
+		BLACKLIST+=("pipewire") # opaque pointers
+		BLACKLIST+=("poac") # opaque pointers
+		BLACKLIST+=("postgis")
+		BLACKLIST+=("predict")
+		BLACKLIST+=("pv")
+		BLACKLIST+=("pypy")
+		BLACKLIST+=("pypy3")
+		BLACKLIST+=("pyqt5")
+		BLACKLIST+=("python-contourpy")
+		BLACKLIST+=("python-grpcio")
+		BLACKLIST+=("python-msgpack") # conflict libmsgpack
+		BLACKLIST+=("python-numpy")
+		BLACKLIST+=("python-onnxruntime")
+		BLACKLIST+=("python-pyarrow")
+		BLACKLIST+=("python-pynvim") # conflict libmsgpack
+		BLACKLIST+=("python-scipy") # numpy
+		BLACKLIST+=("qt5-qmake")
+		BLACKLIST+=("qt5-qtbase")
+		BLACKLIST+=("qt5-qtdeclarative")
+		BLACKLIST+=("qt5-qtgraphicaleffects")
+		BLACKLIST+=("qt5-qtlocation")
+		BLACKLIST+=("qt5-qtmultimedia")
+		BLACKLIST+=("qt5-qtquickcontrols")
+		BLACKLIST+=("qt5-qtquickcontrols2")
+		BLACKLIST+=("qt5-qtscript")
+		BLACKLIST+=("qt5-qtsensors")
+		BLACKLIST+=("qt5-qtserialport")
+		BLACKLIST+=("qt5-qtsvg")
+		BLACKLIST+=("qt5-qttools")
+		BLACKLIST+=("qt5-qtwebchannel")
+		BLACKLIST+=("qt5-qtwebengine")
+		BLACKLIST+=("qt5-qtwebkit")
+		BLACKLIST+=("qt5-qtwebsockets")
+		BLACKLIST+=("qt5-qtx11extras")
+		BLACKLIST+=("qt5-qtxmlpatterns")
+		BLACKLIST+=("qt5ct")
+		BLACKLIST+=("qt6-qtbase")
+		BLACKLIST+=("qt6-qtcharts")
+		BLACKLIST+=("qt6-qtdeclarative")
+		BLACKLIST+=("qt6-qtimageformats")
+		BLACKLIST+=("qt6-qtlanguageserver")
+		BLACKLIST+=("qt6-qtmultimedia")
+		BLACKLIST+=("qt6-qtsvg")
+		BLACKLIST+=("qt6-qttools")
+		BLACKLIST+=("qt6-qttranslations")
+		BLACKLIST+=("qt6-qtwayland")
+		BLACKLIST+=("qt6-shadertools")
+		BLACKLIST+=("qt6ct")
+		BLACKLIST+=("quick-lint-js") # conflict gtest
+		BLACKLIST+=("recutils")
+		BLACKLIST+=("redis")  # opaque pointers
+		BLACKLIST+=("remind")
+		BLACKLIST+=("rirc") # opaque pointers
+		BLACKLIST+=("rizin")
+		BLACKLIST+=("rpm")
+		BLACKLIST+=("rsnapshot")
+		BLACKLIST+=("rtorrent")
+		BLACKLIST+=("shellcheck") # ghc-libs
+		BLACKLIST+=("simulavr")
+		BLACKLIST+=("smalltalk")
+		BLACKLIST+=("snmptt")
+		BLACKLIST+=("squashfuse")
+		BLACKLIST+=("swift")
+		BLACKLIST+=("tinygo")
+		BLACKLIST+=("toxic")
+		BLACKLIST+=("tvheadend")
+		BLACKLIST+=("unar")
+		BLACKLIST+=("valgrind")
+		BLACKLIST+=("vlc") # libmpeg2
+		BLACKLIST+=("waypipe")
+		BLACKLIST+=("z3")
+		BLACKLIST+=("olivia")
+		BLACKLIST+=("opencv")
+		BLACKLIST+=("oshu")
+		BLACKLIST+=("otter-browser")
+		BLACKLIST+=("pavucontrol-qt")
+		BLACKLIST+=("pcmanfm-qt")
+		BLACKLIST+=("phantomjs")
+		BLACKLIST+=("python-pyqtwebengine")
+		BLACKLIST+=("python-qscintilla")
+		BLACKLIST+=("python-torch")
+		BLACKLIST+=("python-torchaudio")
+		BLACKLIST+=("python-torchvision")
+		BLACKLIST+=("qemu-system-x86-64")
+		BLACKLIST+=("qterminal")
+		BLACKLIST+=("qtermwidget")
+		BLACKLIST+=("qtxdg-tools")
+		BLACKLIST+=("quassel")
+		BLACKLIST+=("schismtracker")
+		BLACKLIST+=("scrcpy")
+		BLACKLIST+=("sdl2-image")
+		BLACKLIST+=("sdl2-gfx")
+		BLACKLIST+=("sdl2-net")
+		BLACKLIST+=("sdl2-mixer")
+		BLACKLIST+=("sdl2-pango")
+		BLACKLIST+=("sdl2-ttf")
+		BLACKLIST+=("sway")
+		BLACKLIST+=("the-powder-toy")
+		BLACKLIST+=("tigervnc")
+		BLACKLIST+=("trojita")
+		BLACKLIST+=("tuxpaint")
+		BLACKLIST+=("vlc-qt")
+		BLACKLIST+=("wayvnc")
+		BLACKLIST+=("wine-stable")
+		BLACKLIST+=("wkhtmltopdf")
+		BLACKLIST+=("wlroots")
+		BLACKLIST+=("x11vnc")
+		BLACKLIST+=("xf86-input-void")
+		BLACKLIST+=("xf86-video-dummy")
+		BLACKLIST+=("xorg-server")
+		BLACKLIST+=("xorg-server-xvfb") # /home/builder/.termux-build/xorg-server-xvfb/src/mi/mi.h:153:10: error: unknown type name 'DrawablePtr'; did you mean 'Drawable'?
+		BLACKLIST+=("xpdf")
+		BLACKLIST+=("xrdp")
+		BLACKLIST+=("xwayland")
 
-		# Core utilities.
-		PACKAGES+=("bash") # Used by `termux-bootstrap-second-stage.sh`
-		PACKAGES+=("bzip2")
-		if ! ${BOOTSTRAP_ANDROID10_COMPATIBLE}; then
-			PACKAGES+=("command-not-found")
-		else
-			PACKAGES+=("proot")
-		fi
-		PACKAGES+=("coreutils")
-		PACKAGES+=("curl")
-		PACKAGES+=("dash")
-		PACKAGES+=("diffutils")
-		PACKAGES+=("findutils")
-		PACKAGES+=("gawk")
-		PACKAGES+=("grep")
-		PACKAGES+=("gzip")
-		PACKAGES+=("less")
-		PACKAGES+=("procps")
-		PACKAGES+=("psmisc")
-		PACKAGES+=("sed")
-		PACKAGES+=("tar")
-		PACKAGES+=("termux-exec")
-		PACKAGES+=("termux-keyring")
-		PACKAGES+=("termux-tools")
-		PACKAGES+=("util-linux")
-		PACKAGES+=("xz-utils")
 
-		# Additional.
-		PACKAGES+=("ed")
-		PACKAGES+=("debianutils")
-		PACKAGES+=("dos2unix")
-		PACKAGES+=("inetutils")
-		PACKAGES+=("lsof")
-		PACKAGES+=("nano")
-		PACKAGES+=("net-tools")
-		PACKAGES+=("patch")
-		PACKAGES+=("unzip")
-
-		# Handle additional packages.
-		for add_pkg in "${ADDITIONAL_PACKAGES[@]}"; do
-			if [[ " ${PACKAGES[*]} " != *" $add_pkg "* ]]; then
+		for add_pkg in $(ls $TERMUX_PACKAGES_DIRECTORY/packages && \
+		                 ls $TERMUX_PACKAGES_DIRECTORY/root-packages && \
+		 				 ls $TERMUX_PACKAGES_DIRECTORY/x11-packages); do
+			if [[ " ${PACKAGES[*]} " != *" $add_pkg "* ]] && \
+			   [[ " ${BLACKLIST[*]} " != *" $add_pkg "* ]]; then
 				PACKAGES+=("$add_pkg")
 			fi
 		done

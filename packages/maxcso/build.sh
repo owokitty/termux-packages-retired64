@@ -12,6 +12,9 @@ TERMUX_PKG_BUILD_IN_SRC=true
 termux_step_pre_configure() {
 	CFLAGS+=" $CPPFLAGS"
 	CXXFLAGS+=" $CPPFLAGS"
+	if [ -f "$TERMUX_PREFIX/include/libdeflate.h" ]; then
+		mv  "$TERMUX_PREFIX/include/libdeflate.h"  "$TERMUX_PREFIX/include/libdeflate.h.bak"
+	fi
 }
 
 termux_step_post_make_install() {
@@ -21,4 +24,10 @@ termux_step_post_make_install() {
 		$TERMUX_PREFIX/share/doc/$TERMUX_PKG_NAME/COPYING.libdeflate
 	install -Dm600 -T $TERMUX_PKG_SRCDIR/zopfli/COPYING \
 		$TERMUX_PREFIX/share/doc/$TERMUX_PKG_NAME/COPYING.zopfli
+}
+
+termux_step_post_massage() {
+	if [ -f "$TERMUX_PREFIX/include/libdeflate.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/libdeflate.h.bak"  "$TERMUX_PREFIX/include/libdeflate.h"
+	fi
 }

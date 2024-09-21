@@ -34,3 +34,20 @@ termux_step_post_make_install() {
 	cp $TERMUX_PREFIX/lib/cmake/protobuf/protobuf-targets{,-release}.cmake \
 		$TERMUX_PREFIX/opt/protobuf-cmake/shared/
 }
+
+termux_step_post_massage() {
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	# installing protoc for Android aarch64 into Ubuntu amd64 docker builder's 
+	# $TERMUX_PREFIX/bin folder and failing to remove it afterward will result in.. uhh..
+	# /data/data/com.retired64.termux/files/usr/bin/protoc: 1: : not found
+	# ,T[ar��: not foundired64.termux/files/usr/bin/protoc: 1: Q�td�����/system/bin/linker6�Androidr27b12297006
+	# /data/data/com.retired64.termux/files/usr/bin/protoc: 1: L�: not found
+	# /data/data/com.retired64.termux/files/usr/bin/protoc: 1: ELF�pu@jr@8
+	#                                                                      @@@@h���lelepepupu�3�3�K�6K�6Kx7x7�ML�}L�}L�6�E�@L�L�R�td�K�6K�6Kx7�9P�td4Y4Y4Y: not found
+	# /data/data/com.retired64.termux/files/usr/bin/protoc: 4: Syntax error: Unterminated quoted string
+	# CMake Warning at /home/builder/.termux-build/_cache/cmake-3.30.3/share/cmake-3.30/Modules/FindProtobuf.cmake:626 (message):
+	# when building other packages afterward (for example libprotozero)
+	rm $TERMUX_PREFIX/bin/protoc
+}

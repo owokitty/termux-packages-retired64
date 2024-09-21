@@ -39,3 +39,15 @@ termux_step_pre_configure() {
 		termux_error_exit "Package '$TERMUX_PKG_NAME' is not safe for on-device builds."
 	fi
 }
+
+termux_step_post_massage() {
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	# installing coreutils for Android aarch64 into Ubuntu amd64 docker builder's 
+	# $TERMUX_PREFIX/bin folder and failing to remove it afterward will result in frequent 
+	# "/data/data/com.termux/files/usr/bin/rm: cannot execute binary file: Exec format error"
+	# when building other packages afterward (for example libtheora)
+	rm $TERMUX_PREFIX/bin/coreutils
+	find $TERMUX_PREFIX/bin -xtype l -delete
+}

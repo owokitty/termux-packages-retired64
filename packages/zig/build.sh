@@ -13,6 +13,23 @@ TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_NO_ELF_CLEANER=true
 
 termux_step_pre_configure() {
+	# error: ld.lld: usr/lib/libLLVMWindowsManifest.a(WindowsManifestMerger.cpp.o) is incompatible with elf64-x86-64
+	if ls "$TERMUX_PREFIX/lib/libLLVM"* >/dev/null 2>&1; then
+		mkdir -p "$TERMUX_PREFIX/lib/llvm.bak/"
+		mv "$TERMUX_PREFIX/lib/libLLVM"* "$TERMUX_PREFIX/lib/llvm.bak/"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libz.so" ]; then
+		mv  "$TERMUX_PREFIX/lib/libz.so"  "$TERMUX_PREFIX/lib/libz.so.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libz.a" ]; then
+		mv  "$TERMUX_PREFIX/lib/libz.a"  "$TERMUX_PREFIX/lib/libz.a.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libncursesw.so" ]; then
+		mv  "$TERMUX_PREFIX/lib/libncursesw.so"  "$TERMUX_PREFIX/lib/libncursesw.so.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libncursesw.a" ]; then
+		mv  "$TERMUX_PREFIX/lib/libncursesw.a"  "$TERMUX_PREFIX/lib/libncursesw.a.bak"
+	fi
 	termux_setup_cmake
 	termux_setup_ninja
 	termux_setup_zig
@@ -32,6 +49,25 @@ termux_step_make() {
 termux_step_make_install() {
 	cp -fr "out/zig-${ZIG_TARGET_NAME}-baseline" "${TERMUX_PREFIX}/lib/zig"
 	ln -fsv "../lib/zig/zig" "${TERMUX_PREFIX}/bin/zig"
+}
+
+termux_step_post_make_install() {
+	if [ -d "$TERMUX_PREFIX/lib/llvm.bak/" ]; then
+		mv "$TERMUX_PREFIX/lib/llvm.bak/"* "$TERMUX_PREFIX/lib/"
+		rm -r "$TERMUX_PREFIX/lib/llvm.bak/"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libz.so.bak" ]; then
+		mv  "$TERMUX_PREFIX/lib/libz.so.bak"  "$TERMUX_PREFIX/lib/libz.so"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libz.a.bak" ]; then
+		mv  "$TERMUX_PREFIX/lib/libz.a.bak"  "$TERMUX_PREFIX/lib/libz.a"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libncursesw.so.bak" ]; then
+		mv  "$TERMUX_PREFIX/lib/libncursesw.so.bak"  "$TERMUX_PREFIX/lib/libncursesw.so"
+	fi
+	if [ -f "$TERMUX_PREFIX/lib/libncursesw.a.bak" ]; then
+		mv  "$TERMUX_PREFIX/lib/libncursesw.a.bak"  "$TERMUX_PREFIX/lib/libncursesw.a"
+	fi
 }
 
 termux_step_post_massage() {

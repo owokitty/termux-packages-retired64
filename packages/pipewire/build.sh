@@ -29,6 +29,11 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 "
 
 termux_step_pre_configure() {
+	# fatal error: 'absl/types/optional.h' file not found
+	if [ -d "$TERMUX_PREFIX/include/absl/" ]; then
+		mv "$TERMUX_PREFIX/include/absl/" "$TERMUX_PREFIX/include/absl.bak/"
+	fi
+
 	local _WRAPPER_BIN="${TERMUX_PKG_BUILDDIR}/_wrapper/bin"
 	mkdir -p "${_WRAPPER_BIN}"
 	if [[ "${TERMUX_ON_DEVICE_BUILD}" == "false" ]]; then
@@ -44,4 +49,11 @@ termux_step_pre_configure() {
 	CFLAGS+=" -Dindex=strchr -Drindex=strrchr"
 	sed "s|@TERMUX_PKG_BUILDER_DIR@|${TERMUX_PKG_BUILDER_DIR}|g" \
 		"${TERMUX_PKG_BUILDER_DIR}"/reallocarray.diff | patch -p1
+}
+
+
+termux_step_post_massage() {
+	if [ -d "$TERMUX_PREFIX/include/absl.bak/" ]; then
+		mv "$TERMUX_PREFIX/include/absl.bak/" "$TERMUX_PREFIX/include/absl/"
+	fi
 }

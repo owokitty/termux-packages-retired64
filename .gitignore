@@ -29,6 +29,7 @@ checksum*
 # Built *.deb files.
 /debs/
 /output/
+/output_bak/
 
 # Preinstalled build tools.
 /build-tools/

@@ -29,7 +29,20 @@ termux_step_post_get_source() {
 	fi
 }
 
+termux_step_pre_configure() {
+	# tome2/src/src/format_ext.cc:5:34: error: no type named 'Writer' in namespace 'fmt', etc.
+	if [ -d "$TERMUX_PREFIX/include/fmt/" ]; then
+		mv "$TERMUX_PREFIX/include/fmt/" "$TERMUX_PREFIX/include/fmt.bak/"
+	fi
+}
+
 termux_step_install_license() {
 	install -Dm600 $TERMUX_PKG_BUILDER_DIR/LICENSE \
 		$TERMUX_PREFIX/share/doc/$TERMUX_PKG_NAME/LICENSE
+}
+
+termux_step_post_massage() {
+	if [ -d "$TERMUX_PREFIX/include/fmt.bak/" ]; then
+		mv "$TERMUX_PREFIX/include/fmt.bak/" "$TERMUX_PREFIX/include/fmt/"
+	fi
 }

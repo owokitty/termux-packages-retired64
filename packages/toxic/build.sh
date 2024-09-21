@@ -15,7 +15,7 @@ termux_step_make() {
 		CC="${CC}" \
 		PKG_CONFIG="${PKG_CONFIG}" \
 		USER_CFLAGS="${CFLAGS}" \
-		USER_LDFLAGS="${LDFLAGS}"
+		USER_LDFLAGS="${LDFLAGS}"z
 }
 
 termux_step_make_install() {

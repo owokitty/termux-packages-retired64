@@ -13,6 +13,7 @@ TERMUX_PKG_DEPENDS="fftw, libc++, libtirpc, zlib, ncurses, readline"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --disable-gc
+--disable-lsp
 "
 
 termux_step_post_get_source() {

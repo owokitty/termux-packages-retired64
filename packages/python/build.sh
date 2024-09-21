@@ -96,6 +96,16 @@ termux_step_post_massage() {
 			termux_error_exit "Python module library $module not built"
 		fi
 	done
+
+	# installing python for Android aarch64 into Ubuntu amd64 docker builder's 
+	# $TERMUX_PREFIX/bin folder and failing to remove it afterward will result in frequent 
+	# "Could NOT find Python3 (missing: Interpreter)"
+	# when building other packages afterward (for example vulkan-loader-generic)
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	rm "$TERMUX_PREFIX/bin/python${_MAJOR_VERSION}"
+	find $TERMUX_PREFIX/bin -xtype l -delete
 }
 
 termux_step_create_debscripts() {

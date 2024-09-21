@@ -23,6 +23,7 @@ lib/liblzma.so.${_LZMA_VERSION}
 lib/libtinfo.so.6
 lib/libz.so
 lib/libz.so.1
+lib/libz.a
 share/wasi-sysroot
 "
 
@@ -76,6 +77,16 @@ termux_pkg_auto_update() {
 }
 
 termux_step_pre_configure() {
+	# libssh2/src/kex.c:259:34: error: use of undeclared identifier 'LIBSSH2_DH_MAX_MODULUS_BITS'
+	if [ -f "$TERMUX_PREFIX/include/libssh2.h" ]; then
+		mv  "$TERMUX_PREFIX/include/libssh2.h"  "$TERMUX_PREFIX/include/libssh2.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/libssh2_sftp.h" ]; then
+		mv  "$TERMUX_PREFIX/include/libssh2_sftp.h"  "$TERMUX_PREFIX/include/libssh2_sftp.h.bak"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/libssh2_publickey.h" ]; then
+		mv  "$TERMUX_PREFIX/include/libssh2_publickey.h"  "$TERMUX_PREFIX/include/libssh2_publickey.h.bak"
+	fi
 	termux_setup_cmake
 	termux_setup_rust
 
@@ -122,6 +133,7 @@ termux_step_pre_configure() {
 	mv $TERMUX_PREFIX/lib/libtinfo.so.6{,.tmp} || :
 	mv $TERMUX_PREFIX/lib/libz.so.1{,.tmp} || :
 	mv $TERMUX_PREFIX/lib/libz.so{,.tmp} || :
+	mv $TERMUX_PREFIX/lib/libz.a{,.tmp} || :
 }
 
 termux_step_configure() {
@@ -250,6 +262,7 @@ termux_step_make_install() {
 	mv libtinfo.so.6{.tmp,} || :
 	mv libz.so.1{.tmp,} || :
 	mv libz.so{.tmp,} || :
+	mv libz.a{.tmp,} || :
 
 	ln -vfs rustlib/${CARGO_TARGET_NAME}/lib/*.so .
 	ln -vfs lld ${TERMUX_PREFIX}/bin/rust-lld
@@ -294,4 +307,16 @@ termux_step_make_install() {
 
 	export _INCLUDED=$(echo -e "${_included}\n${_included_rlib}\n${_included_so}")
 	echo -e "INFO: _INCLUDED:\n${_INCLUDED}"
+}
+
+termux_step_post_massage() {
+	if [ -f "$TERMUX_PREFIX/include/libssh2.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/libssh2.h.bak"  "$TERMUX_PREFIX/include/libssh2.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/libssh2_sftp.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/libssh2_sftp.h.bak"  "$TERMUX_PREFIX/include/libssh2_sftp.h"
+	fi
+	if [ -f "$TERMUX_PREFIX/include/libssh2_publickey.h.bak" ]; then
+		mv  "$TERMUX_PREFIX/include/libssh2_publickey.h.bak"  "$TERMUX_PREFIX/include/libssh2_publickey.h"
+	fi
 }

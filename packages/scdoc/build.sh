@@ -14,3 +14,10 @@ termux_step_host_build() {
 	cd $TERMUX_PKG_SRCDIR
 	make OUTDIR=$TERMUX_PKG_HOSTBUILD_DIR
 }
+
+termux_step_post_massage() {
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	rm $TERMUX_PREFIX/bin/scdoc
+}

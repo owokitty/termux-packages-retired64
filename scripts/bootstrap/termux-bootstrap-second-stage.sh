@@ -177,6 +177,10 @@ run_package_postinst_maintainer_scripts() {
 				maintscript_debug=1
 			fi
 
+			chmod +x "${TERMUX_PREFIX}/lib/picolisp/bin/sysdefs-gen"
+			find "${TERMUX_PREFIX}/bin/" -type f -exec chmod +x {} \;
+			find "${TERMUX_PREFIX}/bin/" -type l -exec chmod +x {} \;
+
 			for script_path in "${TERMUX_PREFIX}/var/lib/dpkg/info/"*.postinst; do
 				script_basename="${script_path##*/}"
 				package_name="${script_basename::-9}"

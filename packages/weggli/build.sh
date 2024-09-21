@@ -16,6 +16,16 @@ termux_step_post_get_source() {
 }
 
 termux_step_pre_configure() {
+	# cargo:warning=src/./tree.c:103:6: error: conflicting types for 'ts_tree_print_dot_graph'
+	if [ -d "$TERMUX_PREFIX/include/tree_sitter/" ]; then
+		mv "$TERMUX_PREFIX/include/tree_sitter/" "$TERMUX_PREFIX/include/tree_sitter.bak/"
+	fi
 	# error: version script assignment of 'global' to symbol '__muloti4' failed: symbol not defined
 	RUSTFLAGS+=" -C link-arg=-Wl,--undefined-version"
+}
+
+termux_step_post_massage() {
+	if [ -d "$TERMUX_PREFIX/include/tree_sitter.bak/" ]; then
+		mv "$TERMUX_PREFIX/include/tree_sitter.bak/" "$TERMUX_PREFIX/include/tree_sitter/"
+	fi
 }

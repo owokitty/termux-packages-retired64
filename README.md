@@ -1,4 +1,8 @@
-# Termux packages
+### This is a rough/WIP example of packages for a fork of Termux with a changed package name and a huge number of preinstalled packages
+- The [`bootstrap-aarch64.zip` file in termux-app-retired64](https://github.com/owokitty/termux-app-retired64/tree/retired64v2/app/src/main/assets) can be reconstructed using the code in this repository.
+- This does not clean build, which is [currently reproducible in upstream's close analogue to this project: `build-all.sh`](https://github.com/termux/termux-packages/issues/21130). I might attempt to contribute fixes there based on what I noticed while building this fork.
+
+# Termux packages original README below
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/termux/termux-packages)
 [![Packages last build status](https://github.com/termux/termux-packages/workflows/Packages/badge.svg)](https://github.com/termux/termux-packages/actions)

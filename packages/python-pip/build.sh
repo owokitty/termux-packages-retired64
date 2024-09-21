@@ -32,6 +32,9 @@ termux_step_post_make_install() {
 	fi
 	( # creating pip documentation
 		cd docs/
+		# if [[ "${TERMUX_ON_DEVICE_BUILD}" == "false" ]]; then
+		# 	pip3 install docutils sphinx
+		# fi
 		python pip_sphinxext.py
 		sphinx-build -b man -d build/doctrees/man man build/man -c html
 	)

@@ -15,3 +15,10 @@ TERMUX_PKG_REPLACES="libxslt-dev"
 termux_step_pre_configure() {
 	LDFLAGS+=" -landroid-glob"
 }
+
+termux_step_post_massage() {
+	if $TERMUX_ON_DEVICE_BUILD; then
+		return
+	fi
+	rm "$TERMUX_PREFIX/bin/xsltproc"
+}

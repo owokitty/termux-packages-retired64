@@ -11,6 +11,7 @@ TERMUX_PKG_BUILD_DEPENDS="libandroid-spawn"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --with-tls=gnutls
+--with-dbusdir=$TERMUX_PREFIX/etc/dbus-1
 "
 TERMUX_PKG_CONFFILES="
 etc/cups/cups-files.conf
